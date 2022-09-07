@@ -33,6 +33,7 @@ app.get('/', (req, res) => {
     title: 'Weather',
     name: 'Christine Le'
   })
+  console.log('GET / => Returned to home page ')
 })
 
 app.get('/sleep',  (req, res) => {

@@ -97,6 +97,10 @@ app.post('/test',  (req, res) => {
 
   })
 
+app.get('/ping', (req, res) => {
+  res.json({ message: 'Successfully pinged this page'}
+  )
+})
 
 app.get('*', (req, res) => {
   res.render('404', {

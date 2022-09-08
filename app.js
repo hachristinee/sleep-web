@@ -10,6 +10,7 @@ const {response} = require('express');
 console.log(path.join(__dirname, '../public'))
 
 const app = express()
+const webport = process.env.WEB_PORT
 const options = {
   headers: {"content-type": "application/json"}}
 defaults.baseURL = process.env.APPSERVER
@@ -105,6 +106,6 @@ app.get('*', (req, res) => {
 })
 
 //start the server
-app.listen(3500, ()=> {
-  console.log('Server is running on port http://localhost:3500')
+app.listen(webport, ()=> {
+  console.log(`Server is running on port http://localhost:${webport}`)
 })

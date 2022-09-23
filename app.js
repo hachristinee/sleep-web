@@ -4,19 +4,37 @@ const http = require('http')
 const dotenv = require('dotenv').config()
 const {defaults, post} = require('axios')
 const hbs = require('hbs')
-const {response} = require('express');
+const bunyan = require('bunyan');
+const {LoggingBunyan} = require('@google-cloud/logging-bunyan');
+
+
 
 //console.log(__dirname)
 console.log(path.join(__dirname, '../public'))
-
+const now = new Date()
 const app = express()
 const webport = process.env.WEB_PORT
 const options = {
   headers: {"content-type": "application/json"}}
 defaults.baseURL = process.env.APPSERVER
 
+console.log('Initialising Logger - Production environment detected')
+const loggingBunyan = new LoggingBunyan();
+// Create a Bunyan logger that streams to Cloud Logging
+// Logs will be written to: "projects/YOUR_PROJECT_ID/logs/bunyan_log"
+const logger = bunyan.createLogger({
+  // The JSON payload of the log as it appears in Cloud Logging
+  // will contain "name": "my-service"
+  name: 'web-server',
+  streams: [
+    // Log to the console at 'info' and above
+    {stream: process.stdout, level: 'info'},
+    // And log to Cloud Logging, logging at 'info' and above
+    loggingBunyan.stream('info'),
+  ],
+})
 
-//Defiing Paths
+//Defining Paths
 const viewPath = path.join(__dirname, './templates/views') //if you used a different name for view folder
 const partialsPath = path.join(__dirname, './templates/partials')
 
@@ -39,6 +57,7 @@ app.get('/', (req, res) => {
 
 app.get('/sleep',  (req, res) => {
   console.log('GET /sleep')
+  logger.info('GET /sleep')
   res.render('log', {
   })
 })
@@ -53,10 +72,13 @@ app.post('/sleep',  (req, res) => {
     awake_time: req.body.awake_time
   })
 
+  logger.info({body:req.body})
+
   post('/sleep', JSON.stringify(req.body), options)
       .then(function(res) {
         console.log('Status: ', res.status)
         console.log('Response:', res.data)
+        logger.info({status:res.status})
       })
       .catch(function (error) {
         if (error.response){
@@ -72,44 +94,24 @@ app.post('/sleep',  (req, res) => {
       })
 })
 
-app.post('/test',  (req, res) => {
-    console.log('Received:', req.body)
-
-  res.render('review', {
-    date: req.body.date,
-    bed_time: req.body.bed_time,
-    sleep_time: req.body.sleep_time,
-    awake_time: req.body.awake_time
-  })
-
-  //need to send this data to the app-server for processing on a specific pors
-    const request = http.get('http://localhost:3000/test', (res) => {
-      let data = ''
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      res.on('close', () => {
-        console.log('Retrieved all data');
-        console.log(JSON.parse(data));
-      });
-    })
-
-  })
-
 app.get('/ping', (req, res) => {
   res.json({ message: 'Successfully pinged this page'}
   )
 })
+
+
 
 app.get('*', (req, res) => {
   res.render('404', {
     title: '404 Not Found',
     message: "Sorry the page you're looking for doesn't exist"
   })
+  //logger.error('Page does not exist')
+  console.log(now, 'Page not found')
 })
 
 //start the server
 app.listen(webport, ()=> {
-  console.log(`Server is running on port http://localhost:${webport}`)
+  console.log(now, `Server is running on port http://localhost:${webport}`)
+  logger.info('Server is running on port http://localhost:%s', webport)
 })

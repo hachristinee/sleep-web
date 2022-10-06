@@ -4,7 +4,9 @@ const http = require('http')
 const dotenv = require('dotenv').config()
 const {defaults, post} = require('axios')
 const hbs = require('hbs')
+const os = require('os')
 const {response} = require('express');
+
 
 //console.log(__dirname)
 console.log(path.join(__dirname, '../public'))
@@ -14,6 +16,7 @@ const webport = process.env.WEB_PORT
 const options = {
   headers: {"content-type": "application/json"}}
 defaults.baseURL = process.env.APPSERVER
+const hostName = os.hostname()
 
 
 //Defiing Paths
@@ -32,7 +35,8 @@ app.use(express.urlencoded({extended: true}))
 app.get('/', (req, res) => {
   res.render('home', {
     title: 'Weather',
-    name: 'Christine Le'
+    name: 'Christine Le',
+    host: hostName
   })
   console.log('GET / => Returned to home page ')
 })
@@ -50,7 +54,8 @@ app.post('/sleep',  (req, res) => {
     date: req.body.date,
     bed_time: req.body.bed_time,
     sleep_time: req.body.sleep_time,
-    awake_time: req.body.awake_time
+    awake_time: req.body.awake_time,
+    host: hostName
   })
 
   post('/sleep', JSON.stringify(req.body), options)
@@ -105,7 +110,8 @@ app.get('/ping', (req, res) => {
 app.get('*', (req, res) => {
   res.render('404', {
     title: '404 Not Found',
-    message: "Sorry the page you're looking for doesn't exist"
+    message: "Sorry the page you're looking for doesn't exist",
+    host: hostName
   })
 })
 
